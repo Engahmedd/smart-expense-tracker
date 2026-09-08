@@ -21,8 +21,8 @@ def init_db():
 
 db = init_db()
 
-# قراءة مفتاح الـ API من Secrets بأمان
-api_key = st.secrets.get("AQ.Ab8RN6LY1mBjzx7a1r0c3cTVzHkGrh4dV-iXTvJIBC4sG8uJxg")
+# استبدل بمفتاح Gemini الخاص بك
+GEMINI_API_KEY = "AQ.Ab8RN6LY1mBjzx7a1r0c3cTVzHkGrh4dV-iXTvJIBC4sG8uJxg"
 ai_advisor = AIAdvisor(api_key=GEMINI_API_KEY)
 
 # 3. إدارة جلسة المستخدم (Session State)
@@ -43,16 +43,11 @@ if st.session_state.logged_user is None:
         login_pass = st.text_input("كلمة المرور", type="password", key="l_pass")
         
         if st.button("دخول", type="primary"):
-            if login_user and login_pass:
-                user = User.login(db, login_user, login_pass)
-                if user:
-                    st.session_state.logged_user = user
-                    st.success(f"أهلاً بك {user.username}!")
-                    st.rerun()
-                else:
-                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة!")
-            else:
-                st.warning("يرجى إدخال اسم المستخدم وكلمة المرور.")
+            user = User.login(db, login_user, login_pass)
+            if user:
+                st.session_state.logged_user = user
+                st.success(f"أهلاً بك {user.username}!")
+                st.rerun()
 
     with tab2:
         st.subheader("إنشاء حساب جديد")
@@ -61,7 +56,7 @@ if st.session_state.logged_user is None:
         reg_pass = st.text_input("كلمة المرور", type="password", key="r_pass")
         
         if st.button("تسجيل"):
-            if reg_user and reg_pass:
+            if reg_user and reg_email and reg_pass:
                 try:
                     new_user = User(None, reg_user, reg_email, reg_pass)
                     new_user.save(db)
@@ -69,7 +64,7 @@ if st.session_state.logged_user is None:
                 except Exception as e:
                     st.error("حدث خطأ أثناء التسجيل، قد يكون اسم المستخدم مكرراً.")
             else:
-                st.warning("يرجى ملء الحقول المطلوبة (اسم المستخدم وكلمة المرور).")
+                st.warning("يرجى ملء جميع الحقول المطلوبة.")
 
 # ==========================================
 # الشاشة الرئيسية بعد تسجيل الدخول
@@ -97,7 +92,7 @@ else:
         raw_transactions = Transaction.get_user_transactions(db, current_user.id)
         
         if raw_transactions:
-            df = pd.DataFrame(raw_transactions, columns=["ID", "المبلغ", "التصنيف", "النوع", "التاريخ"])
+            df = pd.DataFrame(raw_transactions, columns=["ID", "المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"])
             df["المبلغ"] = df["المبلغ"].astype(float)
 
             # الحسابات الإجمالية
@@ -125,7 +120,7 @@ else:
 
             with col_table:
                 st.subheader("أحدث المعاملات")
-                st.dataframe(df[["المبلغ", "التصنيف", "النوع", "التاريخ"]], use_container_width=True)
+                st.dataframe(df[["المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"]], use_container_width=True)
 
         else:
             st.info("لا توجد معاملات مسجلة بعد. استخدم قائمة 'إضافة معاملة' للبدء.")
@@ -140,6 +135,7 @@ else:
         amount = st.number_input("المبلغ", min_value=1.0, step=10.0)
         category = st.selectbox("الفئة", ["طعام", "مواصلات", "تسوق", "فواتير", "ترفيه", "صحة", "راتب", "أخرى"])
         trans_date = st.date_input("التاريخ", value=date.today())
+        note = st.text_input("ملاحظات / وصف")
 
         if st.button("حفظ المعاملة", type="primary"):
             new_trans = Transaction(
@@ -147,7 +143,8 @@ else:
                 amount=amount,
                 category=category,
                 trans_type=trans_type,
-                date=trans_date.strftime("%Y-%m-%d")
+                date=trans_date.strftime("%Y-%m-%d"),
+                note=note
             )
             new_trans.save(db)
             st.success("تم حفظ المعاملة بنجاح!")
@@ -155,7 +152,7 @@ else:
             # فحص الميزانية لو كانت المعاملة مصروف
             if trans_type == "Expense":
                 raw_trans = Transaction.get_user_transactions(db, current_user.id)
-                df = pd.DataFrame(raw_trans, columns=["ID", "المبلغ", "التصنيف", "النوع", "التاريخ"])
+                df = pd.DataFrame(raw_trans, columns=["ID", "المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"])
                 df["المبلغ"] = df["المبلغ"].astype(float)
                 current_spending = df[(df["التصنيف"] == category) & (df["النوع"] == "Expense")]["المبلغ"].sum()
 
@@ -184,7 +181,7 @@ else:
     # ------------------------------------------
     elif menu == "المستشار الذكي AI":
         st.title("🤖 المستشار المالي الذكي")
-        st.write("احصل على تحليل مخصص ورؤى ذكية بناءً على سجل معاملاتك المسجلة.")
+        st.write("احصل على تحليل مخصص ورؤى ذكية بناءً على سجل معاملاتك المسجلة في MySQL.")
 
         if st.button("تحليل بياناتي الآن", type="primary"):
             raw_trans = Transaction.get_user_transactions(db, current_user.id)
