@@ -22,7 +22,7 @@ def init_db():
 db = init_db()
 
 # ضع مفتاح Gemini API الخاص بك هنا
-GEMINI_API_KEY = "AQ.Ab8RN6I_6VY0KoaV15OAXA0O-sm7QyTYkgBkjaoxi7LgBcOcGg"
+GEMINI_API_KEY = "AQ.Ab8RN6Lv220_9fJHM-gjcNRvYpP6zsBYkz-lZykbyRxQLdt30g"
 ai_advisor = AIAdvisor(api_key=GEMINI_API_KEY)
 
 # 3. إدارة جلسة المستخدم (Session State)
