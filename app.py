@@ -22,7 +22,7 @@ def init_db():
 db = init_db()
 
 # ضع مفتاح Gemini API الخاص بك المكون من حروف وأرقام تبدأ بـ AIzaSy مباشرة هنا
-GEMINI_API_KEY = "AIzaSy_اكتب_مفتاحك_الصحيح_هنا"
+GEMINI_API_KEY = "AQ.Ab8RN6LY1mBjzx7a1r0c3cTVzHkGrh4dV-iXTvJIBC4sG8uJxg"
 ai_advisor = AIAdvisor(api_key=GEMINI_API_KEY)
 
 # 3. إدارة جلسة المستخدم (Session State)
