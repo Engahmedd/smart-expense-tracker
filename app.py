@@ -21,8 +21,8 @@ def init_db():
 
 db = init_db()
 
-# استبدل بمفتاح Gemini الخاص بك
-GEMINI_API_KEY = "AQ.Ab8RN6LY1mBjzx7a1r0c3cTVzHkGrh4dV-iXTvJIBC4sG8uJxg"
+# ضع مفتاح Gemini API الخاص بك المكون من حروف وأرقام تبدأ بـ AIzaSy مباشرة هنا
+GEMINI_API_KEY = "AIzaSy_اكتب_مفتاحك_الصحيح_هنا"
 ai_advisor = AIAdvisor(api_key=GEMINI_API_KEY)
 
 # 3. إدارة جلسة المستخدم (Session State)
@@ -43,11 +43,16 @@ if st.session_state.logged_user is None:
         login_pass = st.text_input("كلمة المرور", type="password", key="l_pass")
         
         if st.button("دخول", type="primary"):
-            user = User.login(db, login_user, login_pass)
-            if user:
-                st.session_state.logged_user = user
-                st.success(f"أهلاً بك {user.username}!")
-                st.rerun()
+            if login_user and login_pass:
+                user = User.login(db, login_user, login_pass)
+                if user:
+                    st.session_state.logged_user = user
+                    st.success(f"أهلاً بك {user.username}!")
+                    st.rerun()
+                else:
+                    st.error("اسم المستخدم أو كلمة المرور غير صحيحة!")
+            else:
+                st.warning("يرجى إدخال اسم المستخدم وكلمة المرور.")
 
     with tab2:
         st.subheader("إنشاء حساب جديد")
@@ -56,7 +61,7 @@ if st.session_state.logged_user is None:
         reg_pass = st.text_input("كلمة المرور", type="password", key="r_pass")
         
         if st.button("تسجيل"):
-            if reg_user and reg_email and reg_pass:
+            if reg_user and reg_pass:
                 try:
                     new_user = User(None, reg_user, reg_email, reg_pass)
                     new_user.save(db)
@@ -64,7 +69,7 @@ if st.session_state.logged_user is None:
                 except Exception as e:
                     st.error("حدث خطأ أثناء التسجيل، قد يكون اسم المستخدم مكرراً.")
             else:
-                st.warning("يرجى ملء جميع الحقول المطلوبة.")
+                st.warning("يرجى ملء الحقول المطلوبة (اسم المستخدم وكلمة المرور).")
 
 # ==========================================
 # الشاشة الرئيسية بعد تسجيل الدخول
@@ -181,7 +186,7 @@ else:
     # ------------------------------------------
     elif menu == "المستشار الذكي AI":
         st.title("🤖 المستشار المالي الذكي")
-        st.write("احصل على تحليل مخصص ورؤى ذكية بناءً على سجل معاملاتك المسجلة في MySQL.")
+        st.write("احصل على تحليل مخصص ورؤى ذكية بناءً على سجل معاملاتك المسجلة.")
 
         if st.button("تحليل بياناتي الآن", type="primary"):
             raw_trans = Transaction.get_user_transactions(db, current_user.id)
