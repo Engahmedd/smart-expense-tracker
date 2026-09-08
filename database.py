@@ -6,16 +6,14 @@ class Database:
         self.create_tables()
 
     def get_connection(self):
-        # الاتصال بملف قاعدة البيانات المحلي
         conn = sqlite3.connect(self.db_name)
-        conn.row_factory = sqlite3.Row  # عشان نرجّع النتائج كـ Dictionary
+        conn.row_factory = sqlite3.Row
         return conn
 
     def create_tables(self):
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        # جدول المستخدمين
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,7 +22,6 @@ class Database:
             )
         """)
 
-        # جدول المعاملات
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +34,6 @@ class Database:
             )
         """)
 
-        # جدول الميزانية
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS budgets (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,3 +46,29 @@ class Database:
 
         conn.commit()
         conn.close()
+
+    # الدالة التي كانت مفقودة وتسببت في الخطأ
+    def fetch_one(self, query, params=()):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        result = cursor.fetchone()
+        conn.close()
+        return result
+
+    def fetch_all(self, query, params=()):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        result = cursor.fetchall()
+        conn.close()
+        return result
+
+    def execute_query(self, query, params=()):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        conn.commit()
+        last_id = cursor.lastrowid
+        conn.close()
+        return last_id
