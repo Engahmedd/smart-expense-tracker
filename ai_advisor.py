@@ -1,8 +1,9 @@
-from google import genai
+import google.generativeai as genai
 
 class AIAdvisor:
     def __init__(self, api_key: str):
-        self.client = genai.Client(api_key=api_key)
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
 
     def analyze_expenses(self, transactions_list):
         if not transactions_list:
@@ -18,11 +19,7 @@ class AIAdvisor:
         3. نصيحتان عمليتان للتوفير.
         """
         try:
-            # تم التحديث إلى الموديل المطلوب gemini-3.6-flash
-            response = self.client.models.generate_content(
-                model='gemini-3.6-flash',
-                contents=prompt
-            )
+            response = self.model.generate_content(prompt)
             return response.text
         except Exception as e:
             return f"حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: {str(e)}"
