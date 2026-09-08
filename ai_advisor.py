@@ -2,6 +2,7 @@ from google import genai
 
 class AIAdvisor:
     def __init__(self, api_key: str):
+        # التأكد من تمرير المفتاح بشكل صريح كـ API Key
         self.client = genai.Client(api_key=api_key)
 
     def analyze_expenses(self, transactions_list):
@@ -19,7 +20,7 @@ class AIAdvisor:
         """
         try:
             response = self.client.models.generate_content(
-                model='gemini-3.6-flash',
+                model='gemini-2.5-flash',
                 contents=prompt
             )
             return response.text
