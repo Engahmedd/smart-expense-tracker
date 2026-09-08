@@ -22,8 +22,8 @@ def init_db():
 db = init_db()
 
 # قراءة مفتاح الـ API من Secrets بأمان
-api_key = st.secrets.get("GEMINI_API_KEY", "")
-ai_advisor = AIAdvisor()
+api_key = st.secrets.get("AQ.Ab8RN6LY1mBjzx7a1r0c3cTVzHkGrh4dV-iXTvJIBC4sG8uJxg")
+ai_advisor = AIAdvisor(api_key=GEMINI_API_KEY)
 
 # 3. إدارة جلسة المستخدم (Session State)
 if "logged_user" not in st.session_state:
