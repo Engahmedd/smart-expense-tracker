@@ -21,8 +21,8 @@ def init_db():
 
 db = init_db()
 
-# ضع مفتاح Gemini API الخاص بك المكون من حروف وأرقام تبدأ بـ AIzaSy مباشرة هنا
-GEMINI_API_KEY = "AQ.Ab8RN6LY1mBjzx7a1r0c3cTVzHkGrh4dV-iXTvJIBC4sG8uJxg"
+# ضع مفتاح Gemini API الخاص بك هنا
+GEMINI_API_KEY = "AQ.Ab8RN6I_6VY0KoaV15OAXA0O-sm7QyTYkgBkjaoxi7LgBcOcGg"
 ai_advisor = AIAdvisor(api_key=GEMINI_API_KEY)
 
 # 3. إدارة جلسة المستخدم (Session State)
@@ -97,7 +97,16 @@ else:
         raw_transactions = Transaction.get_user_transactions(db, current_user.id)
         
         if raw_transactions:
-            df = pd.DataFrame(raw_transactions, columns=["ID", "المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"])
+            # إنشاء DataFrame تلقائياً والتوافق مع أي عدد من الأعمدة
+            df = pd.DataFrame(raw_transactions)
+            
+            # إعادة تسمية الأعمدة بناءً على ترتيبها في الاستعلام لتجنب أي تعارض
+            cols_count = df.shape[1]
+            if cols_count >= 6:
+                df.columns = ["ID", "المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"][:cols_count]
+            elif cols_count == 5:
+                df.columns = ["المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"]
+
             df["المبلغ"] = df["المبلغ"].astype(float)
 
             # الحسابات الإجمالية
@@ -125,7 +134,8 @@ else:
 
             with col_table:
                 st.subheader("أحدث المعاملات")
-                st.dataframe(df[["المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"]], use_container_width=True)
+                display_cols = [col for col in ["المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"] if col in df.columns]
+                st.dataframe(df[display_cols], use_container_width=True)
 
         else:
             st.info("لا توجد معاملات مسجلة بعد. استخدم قائمة 'إضافة معاملة' للبدء.")
@@ -157,15 +167,22 @@ else:
             # فحص الميزانية لو كانت المعاملة مصروف
             if trans_type == "Expense":
                 raw_trans = Transaction.get_user_transactions(db, current_user.id)
-                df = pd.DataFrame(raw_trans, columns=["ID", "المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"])
-                df["المبلغ"] = df["المبلغ"].astype(float)
-                current_spending = df[(df["التصنيف"] == category) & (df["النوع"] == "Expense")]["المبلغ"].sum()
+                if raw_trans:
+                    df = pd.DataFrame(raw_trans)
+                    cols_count = df.shape[1]
+                    if cols_count >= 6:
+                        df.columns = ["ID", "المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"][:cols_count]
+                    elif cols_count == 5:
+                        df.columns = ["المبلغ", "التصنيف", "النوع", "التاريخ", "ملاحظات"]
 
-                status = Budget.check_status(db, current_user.id, category, current_spending)
-                if "Over Budget" in status:
-                    st.error(f"⚠️ تنبيه: {status}")
-                elif "Within Limit" in status:
-                    st.info(f"ℹ️ حالة الميزانية: {status}")
+                    df["المبلغ"] = df["المبلغ"].astype(float)
+                    current_spending = df[(df["التصنيف"] == category) & (df["النوع"] == "Expense")]["المبلغ"].sum()
+
+                    status = Budget.check_status(db, current_user.id, category, current_spending)
+                    if "Over Budget" in status:
+                        st.error(f"⚠️ تنبيه: {status}")
+                    elif "Within Limit" in status:
+                        st.info(f"ℹ️ حالة الميزانية: {status}")
 
     # ------------------------------------------
     # 3. إدارة الميزانية
